@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NotaPareja — Tu bloc de notas compartido</title>
+  <meta name="description" content="Bloc de notas compartido en tiempo real para escribir y compartir notas fácilmente con tu pareja." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Setup Screen (shown when no room is configured) -->
+  <div id="setup-screen" class="setup-overlay hidden">
+    <div class="setup-card">
+      <div class="setup-logo">
+        <span class="logo-icon">📒</span>
+        <h1>NotaPareja</h1>
+        <p>Tu bloc de notas compartido en tiempo real</p>
+      </div>
+
+      <div class="setup-options">
+        <button id="btn-create-room" class="btn-primary" onclick="createRoom()">
+          <span>✨</span> Crear nueva sala
+        </button>
+        <div class="divider"><span>o</span></div>
+        <div class="join-form">
+          <input type="text" id="room-code-input" placeholder="Ingresa el código de sala..." maxlength="20" />
+          <button id="btn-join-room" class="btn-secondary" onclick="joinRoom()">
+            <span>🔗</span> Unirme
+          </button>
+        </div>
+      </div>
+
+      <p class="setup-hint">Comparte el código de sala con tu pareja para que ambos vean las notas en tiempo real</p>
+    </div>
+  </div>
+
+  <!-- Firebase Config Modal -->
+  <div id="firebase-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h2>⚙️ Configurar Firebase</h2>
+      <p>Para la sincronización en tiempo real, necesitas tu configuración de Firebase. <a href="https://console.firebase.google.com" target="_blank">Crear proyecto gratis →</a></p>
+      <textarea id="firebase-config-input" placeholder='Pega aquí tu configuración de Firebase (objeto firebaseConfig de tu proyecto)...'></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeFirebaseModal()">Cancelar</button>
+        <button class="btn-primary" onclick="saveFirebaseConfig()">Guardar y conectar</button>
+      </div>
+      <details class="config-help">
+        <summary>¿Cómo obtener la configuración?</summary>
+        <ol>
+          <li>Ve a <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a></li>
+          <li>Crea un proyecto (o usa uno existente)</li>
+          <li>Ve a Configuración del proyecto → Tus apps → Web</li>
+          <li>Copia el objeto <code>firebaseConfig</code></li>
+          <li>En Realtime Database, habilita la base de datos en modo de prueba</li>
+        </ol>
+      </details>
+    </div>
+  </div>
+
+  <!-- Share Modal -->
+  <div id="share-modal" class="modal-overlay hidden">
+    <div class="modal-card share-modal-card">
+      <h2>🔗 Compartir sala</h2>
+      <p>Comparte este código con tu pareja para que se una y vea tus notas en tiempo real:</p>
+      <div class="share-code-display">
+        <span id="share-room-code"></span>
+        <button class="btn-icon" onclick="copyRoomCode()" title="Copiar código">📋</button>
+      </div>
+      <div class="share-url-display">
+        <input type="text" id="share-url" readonly />
+        <button class="btn-icon" onclick="copyShareUrl()" title="Copiar enlace">🔗</button>
+      </div>
+      <button class="btn-secondary close-btn" onclick="closeShareModal()">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Main App -->
+  <div id="app" class="app-layout hidden">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <span class="logo-icon-sm">📒</span>
+          <span class="brand-name">NotaPareja</span>
+        </div>
+        <div class="sidebar-actions">
+          <button id="btn-new-note" class="btn-icon-sm" title="Nueva nota" onclick="createNote()">＋</button>
+          <button id="btn-share" class="btn-icon-sm share-btn" title="Compartir sala" onclick="openShareModal()">🔗</button>
+          <button id="btn-settings" class="btn-icon-sm" title="Configuración" onclick="openFirebaseModal()">⚙️</button>
+        </div>
+      </div>
+
+      <div class="room-indicator">
+        <span class="room-dot" id="room-dot"></span>
+        <span id="room-label">Sin conexión</span>
+      </div>
+
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="🔍 Buscar nota..." oninput="filterNotes(this.value)" />
+      </div>
+
+      <div id="notes-list" class="notes-list">
+        <!-- Notes will be rendered here -->
+      </div>
+
+      <button class="sidebar-collapse-btn" id="collapse-btn" onclick="toggleSidebar()">◀</button>
+    </aside>
+
+    <!-- Editor Area -->
+    <main class="editor-area" id="editor-area">
+      <!-- Empty State -->
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon">📝</div>
+        <h2>Selecciona o crea una nota</h2>
+        <p>Elige una nota del panel izquierdo o crea una nueva para comenzar.</p>
+        <button class="btn-primary" onclick="createNote()">✨ Nueva nota</button>
+      </div>
+
+      <!-- Editor -->
+      <div id="editor-container" class="editor-container hidden">
+        <div class="editor-header">
+          <input type="text" id="note-title" class="note-title-input" placeholder="Título de la nota..." oninput="updateNoteTitle(this.value)" />
+          <div class="editor-meta">
+            <span id="note-author" class="note-author"></span>
+            <span id="save-status" class="save-status">Guardado ✓</span>
+            <button class="btn-danger-sm" onclick="deleteCurrentNote()" title="Eliminar nota">🗑</button>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar" id="editor-toolbar">
+          <div class="toolbar-group">
+            <button class="tool-btn" onclick="execCmd('bold')" title="Negrita (Ctrl+B)"><b>B</b></button>
+            <button class="tool-btn" onclick="execCmd('italic')" title="Cursiva (Ctrl+I)"><i>I</i></button>
+            <button class="tool-btn" onclick="execCmd('underline')" title="Subrayado (Ctrl+U)"><u>U</u></button>
+            <button class="tool-btn" onclick="execCmd('strikeThrough')" title="Tachado"><s>S</s></button>
+          </div>
+          <div class="toolbar-divider"></div>
+          <div class="toolbar-group">
+            <button class="tool-btn" onclick="execCmd('insertUnorderedList')" title="Lista">≡</button>
+            <button class="tool-btn" onclick="execCmd('insertOrderedList')" title="Lista numerada">1.</button>
+            <button class="tool-btn" onclick="formatBlock('blockquote')" title="Cita">❝</button>
+          </div>
+          <div class="toolbar-divider"></div>
+          <div class="toolbar-group">
+            <select id="font-size-select" onchange="execCmd('fontSize', this.value)" title="Tamaño">
+              <option value="3" selected>Normal</option>
+              <option value="1">Pequeño</option>
+              <option value="4">Grande</option>
+              <option value="6">Muy grande</option>
+            </select>
+          </div>
+          <div class="toolbar-divider"></div>
+          <div class="toolbar-group">
+            <button class="tool-btn" onclick="execCmd('removeFormat')" title="Limpiar formato">✕</button>
+          </div>
+        </div>
+
+        <!-- Content Editor -->
+        <div
+          id="note-content"
+          class="note-content"
+          contenteditable="true"
+          data-placeholder="Empieza a escribir tu nota aquí..."
+          oninput="onContentChange()"
+          onkeydown="handleEditorKeydown(event)"
+        ></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Firebase SDK (CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
