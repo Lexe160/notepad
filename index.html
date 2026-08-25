@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NotaPareja — Tu bloc de notas compartido</title>
-  <meta name="description" content="Bloc de notas compartido en tiempo real para escribir y compartir notas fácilmente con tu pareja." />
+  <title>NotaPad — Tu bloc de notas compartido</title>
+  <meta name="description"
+    content="Bloc de notas compartido en tiempo real para escribir y compartir notas fácilmente con tu pareja." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
   <!-- Setup Screen (shown when no room is configured) -->
@@ -17,7 +20,7 @@
     <div class="setup-card">
       <div class="setup-logo">
         <span class="logo-icon">📒</span>
-        <h1>NotaPareja</h1>
+        <h1>NotePad</h1>
         <p>Tu bloc de notas compartido en tiempo real</p>
       </div>
 
@@ -42,8 +45,10 @@
   <div id="firebase-modal" class="modal-overlay hidden">
     <div class="modal-card">
       <h2>⚙️ Configurar Firebase</h2>
-      <p>Para la sincronización en tiempo real, necesitas tu configuración de Firebase. <a href="https://console.firebase.google.com" target="_blank">Crear proyecto gratis →</a></p>
-      <textarea id="firebase-config-input" placeholder='Pega aquí tu configuración de Firebase (objeto firebaseConfig de tu proyecto)...'></textarea>
+      <p>Para la sincronización en tiempo real, necesitas tu configuración de Firebase. <a
+          href="https://console.firebase.google.com" target="_blank">Crear proyecto gratis →</a></p>
+      <textarea id="firebase-config-input"
+        placeholder='Pega aquí tu configuración de Firebase (objeto firebaseConfig de tu proyecto)...'></textarea>
       <div class="modal-actions">
         <button class="btn-secondary" onclick="closeFirebaseModal()">Cancelar</button>
         <button class="btn-primary" onclick="saveFirebaseConfig()">Guardar y conectar</button>
@@ -89,11 +94,12 @@
       <div class="sidebar-header">
         <div class="sidebar-brand">
           <span class="logo-icon-sm">📒</span>
-          <span class="brand-name">NotaPareja</span>
+          <span class="brand-name">NotePad</span>
         </div>
         <div class="sidebar-actions">
           <button id="btn-new-note" class="btn-icon-sm" title="Nueva nota" onclick="createNote()">＋</button>
-          <button id="btn-share" class="btn-icon-sm share-btn" title="Compartir sala" onclick="openShareModal()">🔗</button>
+          <button id="btn-share" class="btn-icon-sm share-btn" title="Compartir sala"
+            onclick="openShareModal()">🔗</button>
           <button id="btn-settings" class="btn-icon-sm" title="Configuración" onclick="openFirebaseModal()">⚙️</button>
         </div>
       </div>
@@ -127,7 +133,8 @@
       <!-- Editor -->
       <div id="editor-container" class="editor-container hidden">
         <div class="editor-header">
-          <input type="text" id="note-title" class="note-title-input" placeholder="Título de la nota..." oninput="updateNoteTitle(this.value)" />
+          <input type="text" id="note-title" class="note-title-input" placeholder="Título de la nota..."
+            oninput="updateNoteTitle(this.value)" />
           <div class="editor-meta">
             <span id="note-author" class="note-author"></span>
             <span id="save-status" class="save-status">Guardado ✓</span>
@@ -165,14 +172,9 @@
         </div>
 
         <!-- Content Editor -->
-        <div
-          id="note-content"
-          class="note-content"
-          contenteditable="true"
-          data-placeholder="Empieza a escribir tu nota aquí..."
-          oninput="onContentChange()"
-          onkeydown="handleEditorKeydown(event)"
-        ></div>
+        <div id="note-content" class="note-content" contenteditable="true"
+          data-placeholder="Empieza a escribir tu nota aquí..." oninput="onContentChange()"
+          onkeydown="handleEditorKeydown(event)"></div>
       </div>
     </main>
   </div>
@@ -182,4 +184,5 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="app.js"></script>
 </body>
+
 </html>
